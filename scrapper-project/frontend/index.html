@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Banking AI</title>
+    <script>
+        async function askAI() {
+            let question = document.getElementById("question").value;
+            let responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = "Loading...";
+
+            try {
+                let response = await fetch("http://localhost:5001/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question })
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch response");
+                
+                let data = await response.json();
+                responseDiv.innerHTML = `<strong>AI Response:</strong> ${data.answer}`;
+            } catch (error) {
+                responseDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Ask Banking AI</h1>
+    <input type="text" id="question" placeholder="Ask a banking question..." />
+    <button onclick="askAI()">Ask</button>
+    <div id="response"></div>
+</body>
+</html>
