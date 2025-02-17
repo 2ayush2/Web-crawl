@@ -1,51 +1,51 @@
 services:
   app:
-    build: .  # Build the app from the current directory (where the Dockerfile is)
+    build: .
     container_name: nabil_app
     ports:
-      - "8000:8000"  # Expose port 8000 from the container to your host machine
+      - "8000:8000"  # Expose port 8000 for FastAPI
     volumes:
-      - ./data:/app/data  # Mount the data directory for data persistence
-      - ./static:/app/static  # Mount static folder
-      - ./templates:/app/templates  # Mount templates folder
-      - ./myapp:/app/myapp  # Mount the application code (myapp folder) to the container
+      - ./data:/app/data
+      - ./static:/app/static
+      - ./templates:/app/templates
+      - ./myapp:/app/myapp
     depends_on:
-      - ollama  # Ensures Ollama starts before the FastAPI app
-    restart: always  # restart if the app crashes
+      - ollama
+    restart: always
     environment:
-      - PYTHONPATH=/app  # Set environment variable for Python path
-      - OLLAMA_MODELS=qwen2.5:72b  # Optional: preload the Ollama model
+      - PYTHONPATH=/app
+      - OLLAMA_MODELS=qwen2.5:72b
     command: ["uvicorn", "myapp.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     networks:
-      - app-network  # Make sure this service is part of the network
+      - app-network
 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "11434:11434"  # Ollama API port exposed to the host
+      - "11434:11434"  # Ollama API port
     volumes:
-      - ollama_data:/root/.ollama  # Persistent volume for Ollama models
+      - ollama_data:/root/.ollama
     environment:
-      - OLLAMA_MODELS=qwen2.5:72b  # Preload the Ollama model if you want to
+      - OLLAMA_MODELS=qwen2.5:72b
     restart: always
     networks:
-      - app-network  # Ensure this service is part of the same network
+      - app-network
 
   open-web-ui:
-    image: ghcr.io/open-webui/open-webui:main  # Ensure this is the correct image for Open Web UI
+    image: ghcr.io/open-webui/open-webui:main
     container_name: open-web-ui
     ports:
-      - "4000:3000"  # Expose Open Web UI on port 3000
+      - "4000:3000"  # Expose Open Web UI on port 4000 (host) -> 3000 (container)
     environment:
-      - FASTAPI_URL=http://nabil_app:3000  # Link Open Web UI to FastAPI app
+      - FASTAPI_URL=http://nabil_app:8000  # Corrected to point to FastAPI on port 8000
     depends_on:
-      - app  # Ensure Open Web UI starts after FastAPI app
+      - app
     networks:
-      - app-network  # Ensure this service is part of the same network
+      - app-network
 
 volumes:
-  ollama_data:  # Persistent volume for Ollama models
+  ollama_data:
 
 networks:
-  app-network:  # Define a custom network to enable services to communicate easily
+  app-network:

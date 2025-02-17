@@ -30,7 +30,7 @@ def generate_answer(user_question, scraped_data, model_name="qwen2.5:72b"):
     ai_prompt = f"Based on the following crawled data:\n{scraped_data}\nAnswer the question: {user_question}"
     try:
         # Use the ollama.generate function to interact with the Ollama model
-        model_response = ollama.generate(model=model_name, prompt=ai_prompt)
+        model_response = ollama.generate(model=model_name, prompt=ai_prompt,host="http://ollama:11434")
         return model_response["response"]
     except Exception as e:
         return f"Error communicating with the AI model: {str(e)}"
