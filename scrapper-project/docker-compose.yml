@@ -1,22 +1,51 @@
-version: '3'
 services:
+  app:
+    build: .  # Build the app from the current directory (where the Dockerfile is)
+    container_name: nabil_app
+    ports:
+      - "8000:8000"  # Expose port 8000 from the container to your host machine
+    volumes:
+      - ./data:/app/data  # Mount the data directory for data persistence
+      - ./static:/app/static  # Mount static folder
+      - ./templates:/app/templates  # Mount templates folder
+      - ./myapp:/app/myapp  # Mount the application code (myapp folder) to the container
+    depends_on:
+      - ollama  # Ensures Ollama starts before the FastAPI app
+    restart: always  # restart if the app crashes
+    environment:
+      - PYTHONPATH=/app  # Set environment variable for Python path
+      - OLLAMA_MODELS=qwen2.5:72b  # Optional: preload the Ollama model
+    command: ["uvicorn", "myapp.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - app-network  # Make sure this service is part of the network
+
   ollama:
     image: ollama/ollama:latest
+    container_name: ollama
     ports:
-      - "11434:11434"
-
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    ports:
-      - "3000:3000"
+      - "11434:11434"  # Ollama API port exposed to the host
+    volumes:
+      - ollama_data:/root/.ollama  # Persistent volume for Ollama models
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    depends_on:
-      - ollama
+      - OLLAMA_MODELS=qwen2.5:72b  # Preload the Ollama model if you want to
+    restart: always
+    networks:
+      - app-network  # Ensure this service is part of the same network
 
-  api:
-    build: .
+  open-web-ui:
+    image: ghcr.io/open-webui/open-webui:main  # Ensure this is the correct image for Open Web UI
+    container_name: open-web-ui
     ports:
-      - "8000:8000"
+      - "4000:3000"  # Expose Open Web UI on port 3000
+    environment:
+      - FASTAPI_URL=http://nabil_app:3000  # Link Open Web UI to FastAPI app
     depends_on:
-      - ollama
+      - app  # Ensure Open Web UI starts after FastAPI app
+    networks:
+      - app-network  # Ensure this service is part of the same network
+
+volumes:
+  ollama_data:  # Persistent volume for Ollama models
+
+networks:
+  app-network:  # Define a custom network to enable services to communicate easily

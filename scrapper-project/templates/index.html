@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask the AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        async function askQuestion() {
+            const question = document.getElementById("question").value;
+            const answerDiv = document.getElementById("answer");
+            answerDiv.textContent = "Thinking...";  // Indicate loading
+
+            if (!question) {
+                answerDiv.textContent = "Please enter a question!";
+                return;
+            }
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ question: question }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                answerDiv.textContent = data.answer;
+            } catch (error) {
+                answerDiv.textContent = "Error: " + error.message;
+            } finally {
+                document.getElementById("question").value = ""; // Clear the input
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Ask the AI Model</h1>
+        <input type="text" id="question" placeholder="Ask your question">
+        <button onclick="askQuestion()">Ask</button>
+        <div id="answer"></div>
+    </div>
+</body>
+</html>
